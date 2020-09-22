@@ -57,7 +57,7 @@ class SwitchControllerService:
         if spi_firm is None:
             spi_flash = FlashMemory()
         else:
-            spi_flash = FlashMemory(spi_flash_memory_data = spi_firm)
+            spi_flash = FlashMemory(spi_flash_memory_data=spi_firm)
         lib_controller_type = Controller.from_arg(controller_type)
 
         def create_controller_protocol():
@@ -184,7 +184,12 @@ class SwitchControllerService:
             user_input.append(line.lower())
 
         commands = []
+        until = -1
         for i in range(len(user_input)):
+            if self.is_script_running == False or self.is_connected() == False:
+                return
+            if i <= until:
+                continue
             cmd, *args = user_input[i].split()
             if cmd == 'for':
                 for _ in range(int(args[0])):
