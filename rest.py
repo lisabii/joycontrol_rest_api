@@ -43,6 +43,9 @@ class ConnectRequest(BaseModel):
 class NfcData(BaseModel):
     nfc_data: str = Field(None, title="NFC data - base64 encoded", example="")
 
+class ScriptData(BaseModel):
+    script: str
+
 @app.get("/")
 async def redirect_to_documentation():
     return RedirectResponse(url='/docs')
@@ -61,6 +64,20 @@ async def connect_to_switch(cr: ConnectRequest):
 async def disconnect_from_switch():
     await app.state.switch_controller.disconnect()
     return await controller_status()
+
+@app.post("/controller/script")
+async def run_script(sd: ScriptData):
+    await app.state.switch_controller.run_script(sd.script)
+    return await controller_status()
+
+@app.delete("/controller/script")
+async def cancel_script():
+    await app.state.switch_controller.cancel_script()
+    return await controller_status()
+
+@app.get("/controller/script-status")
+async def get_script_status():
+    return app.state.switch_controller.script_status()
 
 @app.get("/controller/status")
 async def controller_status():
@@ -115,6 +132,8 @@ async def remove_nfc_data():
 @app.on_event("startup")
 async def startup():
     app.state.switch_controller = SwitchControllerService()
+    mac = 'DC:68:EB:A6:E3:D2'
+    await app.state.switch_controller.connect('PRO_CONTROLLER', mac, None)
 
 if __name__ == "__main__":
     log_config = uvicorn.config.LOGGING_CONFIG
